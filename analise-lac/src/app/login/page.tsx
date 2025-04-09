@@ -12,7 +12,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-  const auth = getAuth(app);
+  const auth = getAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
