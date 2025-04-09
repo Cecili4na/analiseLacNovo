@@ -5,7 +5,7 @@ import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { db, app } from '../../firebaseConfig';
+import { app } from '../../firebaseConfig';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -19,7 +19,7 @@ export default function Login() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/dashboardAnalista');
-    } catch (err) {
+    } catch (_) {
       setError('Email ou senha inválidos');
     }
   };
