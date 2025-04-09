@@ -1,17 +1,23 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { initializeApp } from 'firebase/app';
+import { firebaseConfig } from '../../firebaseConfig';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-  const auth = getAuth();
+
+  useEffect(() => {
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
