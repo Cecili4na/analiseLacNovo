@@ -18,7 +18,7 @@ export default function Login() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/dashboardAnalista');
-    } catch (error) {
+    } catch {
       setError('Email ou senha inválidos');
     }
   };
