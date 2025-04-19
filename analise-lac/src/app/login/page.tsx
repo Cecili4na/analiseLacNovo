@@ -16,13 +16,13 @@ export default function Login() {
 
   useEffect(() => {
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    getAuth(app);
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(getAuth(), email, password);
       router.push('/dashboardAnalista');
     } catch {
       setError('Email ou senha inválidos');
@@ -96,7 +96,7 @@ export default function Login() {
             </div>
             <div className="text-center text-sm text-gray-600">
               <span>Não tem uma conta? </span>
-              <Link href="/cadastroAnalista" className="text-[#8BA989] hover:text-[#6B8E6B] hover:underline font-medium">
+              <Link href="/register" className="text-[#8BA989] hover:text-[#6B8E6B] hover:underline font-medium">
                 Cadastre-se
               </Link>
             </div>

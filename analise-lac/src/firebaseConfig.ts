@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAnalytics } from 'firebase/analytics';
+import { getAnalytics, isSupported } from 'firebase/analytics';
+import { getAuth } from 'firebase/auth';
 
 export const firebaseConfig = {
   apiKey: "AIzaSyBKTNeM1-WiHOdUQgwLVh8vkCpKlXPbp6k",
@@ -14,9 +15,17 @@ export const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 
 // Initialize Firestore
 const db = getFirestore(app);
 
-export { app, db }; 
+// Initialize Auth
+const auth = getAuth(app);
+
+// Initialize Analytics only if supported
+let analytics = null;
+if (typeof window !== 'undefined') {
+  isSupported().then(yes => yes && (analytics = getAnalytics(app)));
+}
+
+export { app, db, auth, analytics }; 
