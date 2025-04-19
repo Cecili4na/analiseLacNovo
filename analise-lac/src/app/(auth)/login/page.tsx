@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { initializeApp } from 'firebase/app';
-import { firebaseConfig } from '../../firebaseConfig';
+import { firebaseConfig } from '../../../firebaseConfig';
 
 export default function Login() {
   const [email, setEmail] = useState('');
