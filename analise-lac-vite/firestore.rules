@@ -1,0 +1,117 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Funções auxiliares
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Regras para a coleção de usuários
+    match /users/{userId} {
+      // Usuários podem ler seus próprios dados
+      allow read: if isOwner(userId);
+      
+      // Apenas o próprio usuário pode atualizar seus dados
+      allow update: if isOwner(userId);
+      
+      // Apenas o próprio usuário pode deletar sua conta
+      allow delete: if isOwner(userId);
+
+      // Apenas o próprio usuário pode criar uma nova conta
+      allow create: if isOwner(userId) && 
+        request.resource.data.keys().hasAll(['nome', 'email']) &&
+        request.resource.data.nome is string &&
+        request.resource.data.email is string;
+    }
+
+    // Regras para a coleção de testes pendentes
+    match /testes_pendentes/{testeId} {
+      // Qualquer pessoa pode ler testes pendentes (para responder)
+      allow read: if true;
+      
+      // Qualquer pessoa autenticada pode criar testes pendentes
+      allow create: if isAuthenticated() && 
+        request.resource.data.keys().hasAll(['analistaId', 'criadoPor', 'status', 'dataCriacao', 'atualizadoEm', 'respostas', 'totalRespostas']) &&
+        request.resource.data.analistaId == request.auth.uid;
+      
+      // Qualquer pessoa pode atualizar para adicionar uma resposta
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['respostas', 'totalRespostas', 'atualizadoEm']) &&
+        request.resource.data.totalRespostas == resource.data.totalRespostas + 1;
+      
+      // Apenas o analista que criou pode deletar
+      allow delete: if isAuthenticated() && 
+        resource.data.analistaId == request.auth.uid;
+    }
+
+    // Regras para a coleção de testes
+    match /testes/{testeId} {
+      // Apenas o analista que criou pode ler e modificar
+      allow read, write: if isAuthenticated() && 
+        resource.data.analistaId == request.auth.uid;
+    }
+
+    // Regras para a coleção de julgadores
+    match /julgadores/{julgadorId} {
+      // Apenas o próprio julgador pode ler e modificar seus dados
+      allow read, write: if isOwner(julgadorId);
+    }
+
+    // Regras para a coleção de resultados
+    match /resultados/{resultadoId} {
+      // Apenas o analista que criou pode ler e modificar
+      allow read, write: if isAuthenticated() && 
+        resource.data.analistaId == request.auth.uid;
+    }
+
+    // Regras para a coleção de configurações
+    match /configuracoes/{configId} {
+      // Apenas usuários autenticados podem ler e modificar configurações
+      allow read, write: if isAuthenticated();
+    }
+
+    // Regras para a coleção de logs
+    match /logs/{logId} {
+      // Qualquer pessoa pode criar logs (para auditoria)
+      allow create: if true;
+      
+      // Ninguém pode ler, atualizar ou deletar logs
+      allow read, update, delete: if false;
+    }
+
+    // Regras para a coleção de notificações
+    match /notificacoes/{notificacaoId} {
+      // Usuários podem ler suas próprias notificações
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Usuários podem marcar suas notificações como lidas
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['lida', 'dataLeitura']);
+      
+      // Ninguém pode criar ou deletar notificações
+      allow create, delete: if false;
+    }
+
+    // Regras para a coleção de relatórios
+    match /relatorios/{relatorioId} {
+      // Apenas o analista que criou pode ler e modificar
+      allow read, write: if isAuthenticated() && 
+        resource.data.analistaId == request.auth.uid;
+    }
+
+    // Regras para a coleção de templates
+    match /templates/{templateId} {
+      // Apenas o analista que criou pode ler e modificar
+      allow read, write: if isAuthenticated() && 
+        resource.data.analistaId == request.auth.uid;
+    }
+  }
+} 
