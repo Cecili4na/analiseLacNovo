@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    background-color: #F0F0E5;
+  }
+  
+  html {
+    background-color: #F0F0E5;
+    height: 100%;
+    overflow: auto;
+    overscroll-behavior-y: none;
+  }
+  
+  body {
+    background-color: #F0F0E5;
+    min-height: 100%;
+    overscroll-behavior-y: none;
+  }
+}
