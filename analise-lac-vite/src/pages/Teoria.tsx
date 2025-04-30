@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { FaArrowLeft } from 'react-icons/fa';
 
 export default function Teoria() {
   const navigate = useNavigate();
@@ -18,10 +19,11 @@ export default function Teoria() {
               {showOriginal ? 'Ver em Português' : 'Ver Original'}
             </button>
             <button
-              onClick={() => navigate('/dashboardAnalista')}
-              className="bg-[#6a7a6a] hover:opacity-90 text-white px-4 py-2 rounded-lg"
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-2 px-4 py-2 border border-white rounded-lg hover:bg-[#6E8F6E] transition"
             >
-              Voltar
+              <FaArrowLeft />
+              Voltar ao Dashboard
             </button>
           </div>
         </div>

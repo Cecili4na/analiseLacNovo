@@ -182,12 +182,8 @@ const TestDetails = () => {
         </header>
 
         <main className="container mx-auto p-4">
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-bold text-[#8BA989] mb-4">Informações do Teste</h2>
-            <p className="text-[#666666]">Visualize os detalhes e respostas do teste sensorial.</p>
-          </div>
           <div className="max-w-4xl mx-auto">
-            <div className="text-center">
+            <div className="text-center p-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8BA989] mx-auto"></div>
               <p className="mt-4 text-gray-600">Carregando detalhes do teste...</p>
             </div>
@@ -223,13 +219,23 @@ const TestDetails = () => {
         </header>
 
         <main className="container mx-auto p-4">
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-bold text-[#8BA989] mb-4">Informações do Teste</h2>
-            <p className="text-[#666666]">Visualize os detalhes e respostas do teste sensorial.</p>
-          </div>
           <div className="max-w-4xl mx-auto">
-            <div className="text-center">
-              <p className="text-red-600">{error || 'Teste não encontrado'}</p>
+            <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+              <div className="text-red-500 text-6xl mb-4">
+                <i className="fas fa-exclamation-circle"></i>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                {error || 'Teste não encontrado'}
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Não foi possível encontrar os dados deste teste. Verifique se o ID está correto ou se o teste ainda existe.
+              </p>
+              <button
+                onClick={() => navigate('/testes')}
+                className="bg-[#8BA989] text-white px-6 py-2 rounded-lg hover:bg-[#6E8F6E] transition"
+              >
+                Voltar para Lista de Testes
+              </button>
             </div>
           </div>
         </main>
@@ -349,7 +355,7 @@ const TestDetails = () => {
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-bold text-[#8BA989] mb-4">Atributos Avaliados</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {teste.atributosAvaliados.map((atributo) => (
+              {(teste.atributosAvaliados || []).map((atributo) => (
                 <div
                   key={atributo}
                   className="bg-[#F0F0E5] p-3 rounded-lg text-center text-[#666666]"
@@ -386,7 +392,7 @@ const TestDetails = () => {
                               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Atributo
                               </th>
-                              {teste.amostras.map((amostra) => (
+                              {(teste.amostras || []).map((amostra) => (
                                 <th key={amostra} className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                   Amostra {amostra}
                                 </th>
@@ -394,14 +400,14 @@ const TestDetails = () => {
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
-                            {teste.atributosAvaliados.map((atributo) => (
+                            {(teste.atributosAvaliados || []).map((atributo) => (
                               <tr key={atributo}>
                                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                                   {atributo.charAt(0).toUpperCase() + atributo.slice(1).replace(/([A-Z])/g, ' $1')}
                                 </td>
-                                {teste.amostras.map((amostra) => (
+                                {(teste.amostras || []).map((amostra) => (
                                   <td key={amostra} className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
-                                    {resposta.notas[atributo] && resposta.notas[atributo][amostra] !== undefined
+                                    {resposta.notas?.[atributo]?.[amostra] !== undefined
                                       ? resposta.notas[atributo][amostra]
                                       : '-'}
                                   </td>
@@ -415,7 +421,7 @@ const TestDetails = () => {
                     <div className="mt-4">
                       <h4 className="text-sm font-medium text-[#666666] mb-2">Intenção de Compra</h4>
                       <p className="text-[#333333] capitalize">
-                        {resposta.intencaoCompra.replace(/_/g, ' ')}
+                        {resposta.intencaoCompra?.replace(/_/g, ' ') || '-'}
                       </p>
                       {resposta.comentarios && (
                         <>
@@ -431,7 +437,7 @@ const TestDetails = () => {
           )}
 
           {/* Seção de Análises Estatísticas */}
-          {teste.respostas && teste.respostas.length > 0 && (
+          {teste.respostas && teste.respostas.length > 0 && teste.amostras && teste.atributosAvaliados && (
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-bold text-[#8BA989] mb-4">Análises Estatísticas</h2>
               
@@ -445,7 +451,7 @@ const TestDetails = () => {
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Atributo
                         </th>
-                        {teste.amostras.map((amostra) => (
+                        {(teste.amostras || []).map((amostra) => (
                           <th key={amostra} className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Amostra {amostra}
                           </th>
@@ -453,14 +459,14 @@ const TestDetails = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {teste.atributosAvaliados.map((atributo) => {
+                      {(teste.atributosAvaliados || []).map((atributo) => {
                         // Calcular médias para cada atributo e amostra
-                        const mediasPorAmostra = teste.amostras.map(amostra => {
-                          const notas = teste.respostas
-                            .map(resposta => resposta.notas[atributo]?.[amostra])
+                        const mediasPorAmostra = (teste.amostras || []).map(amostra => {
+                          const notas = (teste.respostas || [])
+                            .map(resposta => resposta.notas?.[atributo]?.[amostra])
                             .filter(nota => nota !== undefined && nota !== null);
                           
-                          if (notas.length === 0) return 0;
+                          if (notas.length === 0) return '-';
                           const soma = notas.reduce((acc, nota) => acc + nota, 0);
                           return (soma / notas.length).toFixed(2);
                         });

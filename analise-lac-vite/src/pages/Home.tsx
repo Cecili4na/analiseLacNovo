@@ -1,151 +1,137 @@
 import { Link } from 'react-router-dom';
-import { FaFlask, FaClipboardCheck, FaChartBar, FaCheckCircle } from 'react-icons/fa';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="bg-primary text-white py-6">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <img
-            src="/images/logo-panc.png"
-            alt="Logo"
-            className="h-20 w-20 object-contain"
-          />
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#FDF7E8] to-[#FFF8E6] font-sans">
+      <div
+        className="w-full px-6 py-16 text-center bg-[#F5E6D3] bg-cover bg-center"
+        style={{
+          backgroundImage: `url('/images/dairy-bg.jpg')`,
+          backgroundColor: 'rgba(245, 230, 211, 0.9)',
+          backgroundBlendMode: 'overlay',
+        }}
+      >
+        <img
+          src="/images/logo-panc.png"
+          alt="PANC Logo"
+          className="w-72 h-auto mx-auto mb-10 animate-pulse"
+        />
+        <h1 className="text-3xl md:text-5xl font-extrabold text-[#6B3A0A] mb-5 tracking-tight">
+          Plataforma de Análise Sensorial de Produtos Laticínios Caprinos
+        </h1>
+        <p className="text-lg md:text-xl text-[#5A6B2F] mb-10 max-w-3xl mx-auto">
+          Plataforma especializada para avaliação e análise sensorial de produtos lácteos caprinos
+        </p>
+        <div className="flex justify-center gap-5">
           <Link
             to="/login"
-            className="bg-white text-primary px-6 py-2 rounded-lg hover:bg-brand-salmon transition-colors font-medium"
+            className="bg-[#7A9B5E] hover:bg-[#5A6B2F] text-white px-10 py-4 rounded-full text-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg"
           >
             Acessar Plataforma
           </Link>
+          <Link
+            to="/cadastro"
+            className="bg-[#D95B43] hover:bg-[#6B3A0A] text-white px-10 py-4 rounded-full text-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg"
+          >
+            Criar Conta
+          </Link>
         </div>
-      </header>
+      </div>
 
-      {/* Hero Section */}
-      <main className="flex-1 bg-background">
-        {/* Seção de Boas-vindas */}
-        <section className="py-16 px-4">
-          <div className="container mx-auto text-center max-w-3xl">
-            <h1 className="text-4xl font-bold text-brand-brown mb-6">
-              Plataforma de Análise Sensorial
-            </h1>
-            <p className="text-xl text-brand-orange mb-12">
-              Simplifique e padronize seus testes sensoriais de produtos lácteos caprinos
-            </p>
-          </div>
-        </section>
-
-        {/* Seção de Recursos */}
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-6xl mx-auto">
-              {/* Card 1 */}
-              <div className="bg-background rounded-lg p-8 text-center shadow-lg transform hover:scale-105 transition-transform">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaFlask className="text-white text-2xl" />
-                </div>
-                <h3 className="text-2xl font-bold text-brand-brown mb-4">
-                  Crie seu Teste
-                </h3>
-                <p className="text-gray-600">
-                  Configure facilmente os parâmetros e critérios de avaliação para seu teste sensorial.
-                </p>
+      <div className="bg-[#FDF7E8] py-20">
+        <div className="container mx-auto px-6">
+          <h2 className="text-4xl font-bold text-center text-[#6B3A0A] mb-16 tracking-wide">
+            Como funciona?
+          </h2>
+          <div className="grid md:grid-cols-3 gap-10">
+            <div className="relative bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-t-4 border-[#7A9B5E]">
+              <div className="absolute -top-5 left-5 w-10 h-10 bg-[#7A9B5E] text-white rounded-full flex items-center justify-center text-xl font-bold">
+                1
               </div>
-
-              {/* Card 2 */}
-              <div className="bg-background rounded-lg p-8 text-center shadow-lg transform hover:scale-105 transition-transform">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaClipboardCheck className="text-white text-2xl" />
-                </div>
-                <h3 className="text-2xl font-bold text-brand-brown mb-4">
-                  Padronização
-                </h3>
-                <p className="text-gray-600">
-                  Garanta que todos os testes sejam avaliados usando os mesmos critérios e padrões.
-                </p>
+              <h3 className="text-2xl font-semibold text-[#6B3A0A] mb-4 mt-4">Criação do Teste</h3>
+              <p className="text-[#555555] leading-relaxed">
+                O analista cria um teste sensorial, definindo os atributos a serem avaliados, configurando escalas e estabelecendo parâmetros específicos para cada produto lácteo caprino.
+              </p>
+            </div>
+            <div className="relative bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-t-4 border-[#D95B43]">
+              <div className="absolute -top-5 left-5 w-10 h-10 bg-[#D95B43] text-white rounded-full flex items-center justify-center text-xl font-bold">
+                2
               </div>
-
-              {/* Card 3 */}
-              <div className="bg-background rounded-lg p-8 text-center shadow-lg transform hover:scale-105 transition-transform">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaChartBar className="text-white text-2xl" />
-                </div>
-                <h3 className="text-2xl font-bold text-brand-brown mb-4">
-                  Análise de Dados
-                </h3>
-                <p className="text-gray-600">
-                  Visualize e analise os resultados dos testes de forma clara e objetiva.
-                </p>
+              <h3 className="text-2xl font-semibold text-[#6B3A0A] mb-4 mt-4">Coleta de Dados</h3>
+              <p className="text-[#555555] leading-relaxed">
+                Os julgadores avaliam os produtos através de um formulário digital intuitivo, garantindo padronização e precisão nas análises sensoriais.
+              </p>
+            </div>
+            <div className="relative bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-t-4 border-[#A68B5E]">
+              <div className="absolute -top-5 left-5 w-10 h-10 bg-[#A68B5E] text-white rounded-full flex items-center justify-center text-xl font-bold">
+                3
               </div>
+              <h3 className="text-2xl font-semibold text-[#6B3A0A] mb-4 mt-4">Análise dos Resultados</h3>
+              <p className="text-[#555555] leading-relaxed">
+                O sistema processa os dados e gera relatórios estatísticos detalhados, oferecendo visualizações claras e insights sobre as propriedades sensoriais dos produtos.
+              </p>
             </div>
           </div>
-        </section>
+        </div>
+      </div>
 
-        {/* Seção de Benefícios */}
-        <section className="py-16 px-4">
-          <div className="container mx-auto max-w-4xl">
-            <h2 className="text-3xl font-bold text-brand-brown text-center mb-12">
-              Benefícios da Plataforma
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="flex items-start space-x-4">
-                <FaCheckCircle className="text-primary text-2xl flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="text-xl font-semibold text-brand-brown mb-2">
-                    Eficiência
-                  </h3>
-                  <p className="text-gray-600">
-                    Reduza o tempo de configuração e execução dos testes sensoriais.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-4">
-                <FaCheckCircle className="text-primary text-2xl flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="text-xl font-semibold text-brand-brown mb-2">
-                    Consistência
-                  </h3>
-                  <p className="text-gray-600">
-                    Mantenha a padronização em todos os processos de avaliação.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-4">
-                <FaCheckCircle className="text-primary text-2xl flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="text-xl font-semibold text-brand-brown mb-2">
-                    Organização
-                  </h3>
-                  <p className="text-gray-600">
-                    Centralize todos os dados e resultados em um único lugar.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-4">
-                <FaCheckCircle className="text-primary text-2xl flex-shrink-0 mt-1" />
-                <div>
-                  <h3 className="text-xl font-semibold text-brand-brown mb-2">
-                    Confiabilidade
-                  </h3>
-                  <p className="text-gray-600">
-                    Obtenha resultados precisos e confiáveis para suas análises.
-                  </p>
-                </div>
-              </div>
+      <div className="container mx-auto px-6 py-20">
+        <h2 className="text-4xl font-bold text-center text-[#6B3A0A] mb-16 tracking-wide">
+          Por que usar nossa plataforma?
+        </h2>
+        <div className="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+          <div className="flex items-start space-x-5">
+            <div className="flex-shrink-0 w-14 h-14 bg-[#7A9B5E] rounded-full flex items-center justify-center text-white text-2xl">
+              ✓
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold text-[#6B3A0A] mb-3">Facilidade de Uso</h3>
+              <p className="text-[#555555] leading-relaxed">
+                Interface intuitiva e amigável para todos os usuários.
+              </p>
             </div>
           </div>
-        </section>
-      </main>
+          <div className="flex items-start space-x-5">
+            <div className="flex-shrink-0 w-14 h-14 bg-[#D95B43] rounded-full flex items-center justify-center text-white text-2xl">
+              ✓
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold text-[#6B3A0A] mb-3">Resultados Precisos</h3>
+              <p className="text-[#555555] leading-relaxed">
+                Análises estatísticas confiáveis e detalhadas.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start space-x-5">
+            <div className="flex-shrink-0 w-14 h-14 bg-[#A68B5E] rounded-full flex items-center justify-center text-white text-2xl">
+              ✓
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold text-[#6B3A0A] mb-3">Economia de Tempo</h3>
+              <p className="text-[#555555] leading-relaxed">
+                Automatização de processos e geração de relatórios.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start space-x-5">
+            <div className="flex-shrink-0 w-14 h-14 bg-[#DEB887] rounded-full flex items-center justify-center text-white text-2xl">
+              ✓
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold text-[#6B3A0A] mb-3">Suporte Especializado</h3>
+              <p className="text-[#555555] leading-relaxed">
+                Equipe técnica pronta para ajudar quando necessário.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* Footer */}
-      <footer className="bg-primary text-white py-8">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-base">
-            &copy; {new Date().getFullYear()} PANC - PLATAFORMA DE ANÁLISE SENSORIAL DE PRODUTOS LÁCTEOS CAPRINOS<br />
-            Todos os direitos reservados.
-          </p>
+      <footer className="bg-[#6B3A0A] text-white py-8 mt-auto">
+        <div className="container mx-auto px-6 text-center">
+          <p className="text-sm">© 2025 Plataforma de Análise Sensorial de Laticínios Caprinos</p>
         </div>
       </footer>
     </div>
   );
-} 
+}
