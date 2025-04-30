@@ -58,7 +58,7 @@ export default function Perfil() {
         <header className="bg-[#8BA989] text-white py-4">
           <div className="container mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <img src="/logo-panc.png" alt="PANC Logo" className="h-12 w-auto" />
+              <img src="/images/logo-panc.png" alt="PANC Logo" className="h-12 w-auto" />
               <h1 className="text-2xl font-bold">Perfil</h1>
             </div>
             <button
@@ -93,7 +93,7 @@ export default function Perfil() {
         <header className="bg-[#8BA989] text-white py-4">
           <div className="container mx-auto px-4 flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <img src="/logo-panc.png" alt="PANC Logo" className="h-12 w-auto" />
+              <img src="/images/logo-panc.png" alt="PANC Logo" className="h-12 w-auto" />
               <h1 className="text-2xl font-bold">Perfil</h1>
             </div>
             <button
@@ -126,7 +126,7 @@ export default function Perfil() {
       <header className="bg-[#8BA989] text-white py-4">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <img src="/logo-panc.png" alt="PANC Logo" className="h-12 w-auto" />
+            <img src="/images/logo-panc.png" alt="PANC Logo" className="h-12 w-auto" />
             <h1 className="text-2xl font-bold">Perfil</h1>
           </div>
           <div className="flex items-center gap-4">

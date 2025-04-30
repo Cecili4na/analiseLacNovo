@@ -25,7 +25,7 @@ export default function Home() {
         <div className="flex justify-center gap-5">
           <Link
             to="/login"
-            className="bg-[#7A9B5E] hover:bg-[#5A6B2F] text-white px-10 py-4 rounded-full text-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg"
+            className="bg-[#8BA989] hover:bg-[#6E8F6E] text-white px-10 py-4 rounded-full text-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg"
           >
             Acessar Plataforma
           </Link>
@@ -45,7 +45,7 @@ export default function Home() {
           </h2>
           <div className="grid md:grid-cols-3 gap-10">
             <div className="relative bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-t-4 border-[#7A9B5E]">
-              <div className="absolute -top-5 left-5 w-10 h-10 bg-[#7A9B5E] text-white rounded-full flex items-center justify-center text-xl font-bold">
+              <div className="absolute -top-5 left-5 w-10 h-10 bg-[#8BA989] text-white rounded-full flex items-center justify-center text-xl font-bold">
                 1
               </div>
               <h3 className="text-2xl font-semibold text-[#6B3A0A] mb-4 mt-4">Criação do Teste</h3>
@@ -81,7 +81,7 @@ export default function Home() {
         </h2>
         <div className="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
           <div className="flex items-start space-x-5">
-            <div className="flex-shrink-0 w-14 h-14 bg-[#7A9B5E] rounded-full flex items-center justify-center text-white text-2xl">
+            <div className="flex-shrink-0 w-14 h-14 bg-[#8BA989] rounded-full flex items-center justify-center text-white text-2xl">
               ✓
             </div>
             <div>

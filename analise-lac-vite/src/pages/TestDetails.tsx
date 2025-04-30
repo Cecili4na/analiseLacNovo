@@ -269,8 +269,19 @@ const TestDetails = () => {
 
       <main className="container mx-auto p-4">
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-bold text-[#8BA989] mb-4">Informações do Teste</h2>
-          <p className="text-[#666666]">Visualize os detalhes e respostas do teste sensorial.</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-bold text-[#8BA989] mb-4">Informações do Teste</h2>
+              <p className="text-[#666666]">Visualize os detalhes e respostas do teste sensorial.</p>
+            </div>
+            <button
+              onClick={exportarParaExcel}
+              className="flex items-center gap-2 bg-[#8BA989] text-white px-4 py-2 rounded-lg hover:bg-[#6E8F6E] transition"
+            >
+              <FaFileExcel />
+              Exportar Dados
+            </button>
+          </div>
         </div>
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="bg-white rounded-lg shadow p-6">
