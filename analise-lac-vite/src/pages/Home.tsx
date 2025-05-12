@@ -16,10 +16,7 @@ export default function Home() {
           alt="PANC Logo"
           className="w-72 h-auto mx-auto mb-10 animate-pulse"
         />
-        <h1 className="text-3xl md:text-5xl font-extrabold text-[#6B3A0A] mb-5 tracking-tight">
-          Plataforma de Análise Sensorial de Produtos Laticínios Caprinos
-        </h1>
-        <p className="text-lg md:text-xl text-[#5A6B2F] mb-10 max-w-3xl mx-auto">
+        <p className="text-xl md:text-2xl font-semibold text-[#5A6B2F] mb-10 max-w-3xl mx-auto">
           Plataforma especializada para avaliação e análise sensorial de produtos lácteos caprinos
         </p>
         <div className="flex justify-center gap-5">

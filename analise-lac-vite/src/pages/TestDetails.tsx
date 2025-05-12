@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { app } from '../firebaseConfig';
 import { FaArrowLeft, FaFileExcel } from 'react-icons/fa';
+import ErrorMessage from '../components/ui/ErrorMessage';
 
 interface Teste {
   id: string;
@@ -26,12 +27,48 @@ interface Teste {
     idadeJulgador: string;
     generoJulgador: string;
     notas: { [atributo: string]: { [amostra: string]: number } };
-    intencaoCompra: string;
+    intencaoCompra: { [amostra: string]: string };
     comentarios: string;
     dataAvaliacao: string;
     termoAceito: boolean;
   }>;
+  tipoAnaliseEstatistica: string;
+  dataCriacao: string;
+  analistaId: string;
+  criadoPor: string;
+  atualizadoEm: string;
+  escalaHedonica: '5' | '7' | '9';
 }
+
+const escalasHedonicas = {
+  '5': [
+    { valor: 5, descricao: 'Gostei muito' },
+    { valor: 4, descricao: 'Gostei' },
+    { valor: 3, descricao: 'Indiferente' },
+    { valor: 2, descricao: 'Não gostei' },
+    { valor: 1, descricao: 'Não gostei muito' }
+  ],
+  '7': [
+    { valor: 7, descricao: 'Gostei muitíssimo' },
+    { valor: 6, descricao: 'Gostei muito' },
+    { valor: 5, descricao: 'Gostei moderadamente' },
+    { valor: 4, descricao: 'Nem gostei, nem desgostei' },
+    { valor: 3, descricao: 'Não gostei moderadamente' },
+    { valor: 2, descricao: 'Não gostei muito' },
+    { valor: 1, descricao: 'Não gostei de jeito nenhum' }
+  ],
+  '9': [
+    { valor: 9, descricao: 'Gostei muitíssimo' },
+    { valor: 8, descricao: 'Gostei muito' },
+    { valor: 7, descricao: 'Gostei moderadamente' },
+    { valor: 6, descricao: 'Gostei ligeiramente' },
+    { valor: 5, descricao: 'Nem gostei, nem desgostei' },
+    { valor: 4, descricao: 'Não gostei ligeiramente' },
+    { valor: 3, descricao: 'Não gostei moderadamente' },
+    { valor: 2, descricao: 'Não gostei muito' },
+    { valor: 1, descricao: 'Desgostei muitíssimo' }
+  ]
+};
 
 const TestDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,10 +76,34 @@ const TestDetails = () => {
   const [teste, setTeste] = useState<Teste | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [mostrarRespostas, setMostrarRespostas] = useState(false);
+
+  const validarDadosTeste = (dados: any): boolean => {
+    if (!dados) return false;
+
+    // Campos mínimos necessários para exibir um teste
+    const camposMinimos = [
+      'produto',
+      'fabricante'
+    ];
+
+    // Verifica se os campos mínimos existem
+    const camposMinimosValidos = camposMinimos.every(campo => {
+      const valor = dados[campo];
+      return valor !== undefined && valor !== null && valor !== '';
+    });
+
+    return camposMinimosValidos;
+  };
 
   useEffect(() => {
     const carregarTeste = async () => {
-      if (!id) return;
+      if (!id) {
+        setError('ID do teste não fornecido');
+        setLoading(false);
+        return;
+      }
+
       try {
         const db = getFirestore(app);
         const testeDoc = await getDoc(doc(db, 'testes_pendentes', id));
@@ -50,15 +111,80 @@ const TestDetails = () => {
           const concluidoDoc = await getDoc(doc(db, 'testes', id));
           if (!concluidoDoc.exists()) {
             setError('Teste não encontrado');
+            setLoading(false);
             return;
           }
-          setTeste({ id: concluidoDoc.id, ...concluidoDoc.data() } as Teste);
+          const dados = concluidoDoc.data();
+          if (!validarDadosTeste(dados)) {
+            setError('Dados do teste incompletos ou inválidos');
+            setLoading(false);
+            return;
+          }
+          // Adiciona campos padrão para testes antigos
+          const dadosCompletos = {
+            produto: dados.produto || '',
+            fabricante: dados.fabricante || '',
+            tipoEmbalagem: '',
+            pesoProduto: '',
+            dataFabricacao: '',
+            dataValidade: '',
+            dataTeste: '',
+            horarioTeste: '',
+            localTeste: '',
+            tipoTeste: 'escalaHedonica',
+            quantidadeAvaliadores: 0,
+            totalRespostas: 0,
+            status: 'concluido',
+            atributosAvaliados: [],
+            amostras: [],
+            respostas: [],
+            tipoAnaliseEstatistica: 'anova',
+            dataCriacao: new Date().toISOString(),
+            analistaId: '',
+            criadoPor: '',
+            atualizadoEm: new Date().toISOString(),
+            escalaHedonica: '9',
+            ...dados
+          };
+          setTeste({ id: concluidoDoc.id, ...dadosCompletos } as Teste);
         } else {
-          setTeste({ id: testeDoc.id, ...testeDoc.data() } as Teste);
+          const dados = testeDoc.data();
+          if (!validarDadosTeste(dados)) {
+            setError('Dados do teste incompletos ou inválidos');
+            setLoading(false);
+            return;
+          }
+          // Adiciona campos padrão para testes antigos
+          const dadosCompletos = {
+            produto: dados.produto || '',
+            fabricante: dados.fabricante || '',
+            tipoEmbalagem: '',
+            pesoProduto: '',
+            dataFabricacao: '',
+            dataValidade: '',
+            dataTeste: '',
+            horarioTeste: '',
+            localTeste: '',
+            tipoTeste: 'escalaHedonica',
+            quantidadeAvaliadores: 0,
+            totalRespostas: 0,
+            status: 'pendente',
+            atributosAvaliados: [],
+            amostras: [],
+            respostas: [],
+            tipoAnaliseEstatistica: 'anova',
+            dataCriacao: new Date().toISOString(),
+            analistaId: '',
+            criadoPor: '',
+            atualizadoEm: new Date().toISOString(),
+            escalaHedonica: '9',
+            ...dados
+          };
+          setTeste({ id: testeDoc.id, ...dadosCompletos } as Teste);
         }
       } catch (err) {
-        setError('Erro ao carregar teste');
-        console.error(err);
+        console.error('Erro ao carregar teste:', err);
+        setError('Erro ao carregar teste. Por favor, tente novamente.');
       } finally {
         setLoading(false);
       }
@@ -86,8 +212,8 @@ const TestDetails = () => {
       teste.atributosAvaliados.forEach(atributo => {
         cabecalhoNotas.push(`A${amostra} - ${atributo}`);
       });
+      cabecalhoNotas.push(`A${amostra} - Intenção de Compra`);
     });
-    cabecalhoNotas.push('Intenção de Compra');
     dadosExportacao.push(cabecalhoNotas);
     
     // Dados de cada julgador
@@ -104,10 +230,10 @@ const TestDetails = () => {
           const nota = resposta.notas[atributo]?.[amostra] || '';
           linhaDados.push(nota.toString());
         });
+        // Adicionar intenção de compra para cada amostra
+        const intencao = resposta.intencaoCompra?.[amostra]?.replace(/_/g, ' ') || '';
+        linhaDados.push(intencao);
       });
-      
-      // Adicionar intenção de compra
-      linhaDados.push(resposta.intencaoCompra.replace(/_/g, ' '));
       
       dadosExportacao.push(linhaDados);
     });
@@ -199,51 +325,12 @@ const TestDetails = () => {
 
   if (error || !teste) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#F0F0E5]">
-        <header className="bg-primary text-white p-4">
-          <div className="container mx-auto flex justify-between items-center">
-            <div className="flex items-center">
-              <Link to="/dashboard" className="mr-4">
-                <img src="/images/logo-panc.png" alt="PANC Logo" className="h-12 w-auto" />
-              </Link>
-              <h1 className="text-2xl font-bold">Detalhes do Teste</h1>
-            </div>
-            <button
-              onClick={() => navigate('/testes')}
-              className="flex items-center gap-2 px-4 py-2 border border-white rounded-lg hover:bg-[#6E8F6E] transition"
-            >
-              <FaArrowLeft />
-              Voltar aos Testes
-            </button>
-          </div>
-        </header>
-
-        <main className="container mx-auto p-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-              <div className="text-red-500 text-6xl mb-4">
-                <i className="fas fa-exclamation-circle"></i>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                {error || 'Teste não encontrado'}
-              </h2>
-              <p className="text-gray-600 mb-6">
-                Não foi possível encontrar os dados deste teste. Verifique se o ID está correto ou se o teste ainda existe.
-              </p>
-              <button
-                onClick={() => navigate('/testes')}
-                className="bg-[#8BA989] text-white px-6 py-2 rounded-lg hover:bg-[#6E8F6E] transition"
-              >
-                Voltar para Lista de Testes
-              </button>
-            </div>
-          </div>
-        </main>
-
-        <footer className="bg-[#8BA989] text-white py-4 text-center text-sm">
-          <p>© 2025 Plataforma de Análise Sensorial de Laticínios Caprinos</p>
-        </footer>
-      </div>
+      <ErrorMessage
+        title="Erro ao Carregar Teste"
+        message={error || 'Não foi possível encontrar os dados deste teste. Verifique se o ID está correto ou se o teste ainda existe.'}
+        backUrl="/testes"
+        backText="Voltar para Lista de Testes"
+      />
     );
   }
 
@@ -328,6 +415,16 @@ const TestDetails = () => {
                 <p className="text-[#333333] capitalize">{teste.tipoTeste}</p>
               </div>
               <div>
+                <label className="block text-sm font-medium text-[#666666] mb-1">Escala Hedônica</label>
+                <p className="text-[#333333]">
+                  {teste.escalaHedonica} pontos - {
+                    teste.escalaHedonica === '5' ? '5 (Gostei muito) a 1 (Não gostei muito)' :
+                    teste.escalaHedonica === '7' ? '7 (Gostei muitíssimo) a 1 (Não gostei de jeito nenhum)' :
+                    '9 (Gostei muitíssimo) a 1 (Desgostei muitíssimo)'
+                  }
+                </p>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-[#666666] mb-1">
                   Avaliadores ({teste.totalRespostas}/{teste.quantidadeAvaliadores})
                 </label>
@@ -377,73 +474,91 @@ const TestDetails = () => {
             </div>
           </div>
 
+          {/* Seção de Respostas */}
           {teste.respostas && teste.respostas.length > 0 && (
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold text-[#8BA989] mb-4">Respostas</h2>
-              <div className="space-y-4">
-                {teste.respostas.map((resposta, index) => (
-                  <div key={index} className="border border-[#D1D5DB] rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="font-medium text-[#333333]">{resposta.nomeJulgador}</h3>
-                        <p className="text-sm text-[#666666]">
-                          Idade: {resposta.idadeJulgador} | Gênero: {resposta.generoJulgador}
-                        </p>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-[#8BA989]">Respostas</h2>
+                <button
+                  onClick={() => setMostrarRespostas(!mostrarRespostas)}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#8BA989] text-white rounded-lg hover:bg-[#6E8F6E] transition"
+                >
+                  {mostrarRespostas ? 'Ocultar Respostas' : 'Mostrar Respostas'}
+                </button>
+              </div>
+              {mostrarRespostas && (
+                <div className="space-y-4">
+                  {teste.respostas.map((resposta, index) => (
+                    <div key={index} className="border border-[#D1D5DB] rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="font-medium text-[#333333]">{resposta.nomeJulgador}</h3>
+                          <p className="text-sm text-[#666666]">
+                            Idade: {resposta.idadeJulgador} | Gênero: {resposta.generoJulgador}
+                          </p>
+                        </div>
+                        <span className="text-sm text-[#666666]">
+                          {new Date(resposta.dataAvaliacao).toLocaleString()}
+                        </span>
                       </div>
-                      <span className="text-sm text-[#666666]">
-                        {new Date(resposta.dataAvaliacao).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="mt-4">
-                      <h4 className="text-sm font-medium text-[#666666] mb-2">Notas por Amostra</h4>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Atributo
-                              </th>
-                              {(teste.amostras || []).map((amostra) => (
-                                <th key={amostra} className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Amostra {amostra}
+                      <div className="mt-4">
+                        <h4 className="text-sm font-medium text-[#666666] mb-2">Notas por Amostra</h4>
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Atributo
                                 </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {(teste.atributosAvaliados || []).map((atributo) => (
-                              <tr key={atributo}>
-                                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                                  {atributo.charAt(0).toUpperCase() + atributo.slice(1).replace(/([A-Z])/g, ' $1')}
-                                </td>
                                 {(teste.amostras || []).map((amostra) => (
-                                  <td key={amostra} className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
-                                    {resposta.notas?.[atributo]?.[amostra] !== undefined
-                                      ? resposta.notas[atributo][amostra]
-                                      : '-'}
-                                  </td>
+                                  <th key={amostra} className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Amostra {amostra}
+                                  </th>
                                 ))}
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {(teste.atributosAvaliados || []).map((atributo) => (
+                                <tr key={atributo}>
+                                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                    {atributo.charAt(0).toUpperCase() + atributo.slice(1).replace(/([A-Z])/g, ' $1')}
+                                  </td>
+                                  {(teste.amostras || []).map((amostra) => (
+                                    <td key={amostra} className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 text-center">
+                                      {resposta.notas?.[atributo]?.[amostra] !== undefined
+                                        ? resposta.notas[atributo][amostra]
+                                        : '-'}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <h4 className="text-sm font-medium text-[#666666] mb-2">Intenção de Compra</h4>
+                        <div className="space-y-2">
+                          {teste.amostras.map((amostra) => (
+                            <div key={amostra}>
+                              <p className="text-sm text-[#666666]">Amostra {amostra}:</p>
+                              <p className="text-[#333333] capitalize">
+                                {resposta.intencaoCompra?.[amostra]?.replace(/_/g, ' ') || '-'}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                        {resposta.comentarios && (
+                          <>
+                            <h4 className="text-sm font-medium text-[#666666] mt-4 mb-2">Comentários</h4>
+                            <p className="text-[#333333]">{resposta.comentarios}</p>
+                          </>
+                        )}
                       </div>
                     </div>
-                    <div className="mt-4">
-                      <h4 className="text-sm font-medium text-[#666666] mb-2">Intenção de Compra</h4>
-                      <p className="text-[#333333] capitalize">
-                        {resposta.intencaoCompra?.replace(/_/g, ' ') || '-'}
-                      </p>
-                      {resposta.comentarios && (
-                        <>
-                          <h4 className="text-sm font-medium text-[#666666] mt-4 mb-2">Comentários</h4>
-                          <p className="text-[#333333]">{resposta.comentarios}</p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -504,40 +619,42 @@ const TestDetails = () => {
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-[#8BA989] mb-3">Análise de Intenção de Compra</h3>
                 <div className="grid grid-cols-1 gap-4">
-                  <div className="bg-[#F0F0E5] p-4 rounded-lg">
-                    <h4 className="text-md font-medium text-[#666666] mb-2">Distribuição por Intenção</h4>
-                    <div className="space-y-3">
-                      {[
-                        { value: 'definitivamente_compraria', label: 'Compraria definitivamente' },
-                        { value: 'provavelmente_compraria', label: 'Compraria provavelmente' },
-                        { value: 'talvez_compraria', label: 'Talvez compraria' },
-                        { value: 'provavelmente_nao_compraria', label: 'Provavelmente não compraria' },
-                        { value: 'definitivamente_nao_compraria', label: 'Definitivamente não compraria' }
-                      ].map(({ value, label }) => {
-                        const count = teste.respostas.filter(resposta => 
-                          resposta.intencaoCompra && 
-                          resposta.intencaoCompra.toLowerCase() === value.toLowerCase()
-                        ).length;
-                        
-                        const porcentagem = ((count / teste.respostas.length) * 100).toFixed(1);
-                        
-                        return (
-                          <div key={value}>
-                            <div className="flex justify-between mb-1">
-                              <span className="text-sm text-[#666666]">{label}</span>
-                              <span className="text-sm font-medium text-[#333333]">{porcentagem}%</span>
+                  {teste.amostras.map((amostra) => (
+                    <div key={amostra} className="bg-[#F0F0E5] p-4 rounded-lg">
+                      <h4 className="text-md font-medium text-[#666666] mb-2">Amostra {amostra}</h4>
+                      <div className="space-y-3">
+                        {[
+                          { value: 'definitivamente_compraria', label: 'Compraria definitivamente' },
+                          { value: 'provavelmente_compraria', label: 'Compraria provavelmente' },
+                          { value: 'talvez_compraria', label: 'Talvez compraria' },
+                          { value: 'provavelmente_nao_compraria', label: 'Provavelmente não compraria' },
+                          { value: 'definitivamente_nao_compraria', label: 'Definitivamente não compraria' }
+                        ].map(({ value, label }) => {
+                          const count = teste.respostas.filter(resposta => 
+                            resposta.intencaoCompra && 
+                            resposta.intencaoCompra[amostra] === value
+                          ).length;
+                          
+                          const porcentagem = ((count / teste.respostas.length) * 100).toFixed(1);
+                          
+                          return (
+                            <div key={value}>
+                              <div className="flex justify-between mb-1">
+                                <span className="text-sm text-[#666666]">{label}</span>
+                                <span className="text-sm font-medium text-[#333333]">{porcentagem}%</span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                <div
+                                  className="bg-[#8BA989] h-2.5 rounded-full"
+                                  style={{ width: `${porcentagem}%` }}
+                                ></div>
+                              </div>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2.5">
-                              <div
-                                className="bg-[#8BA989] h-2.5 rounded-full"
-                                style={{ width: `${porcentagem}%` }}
-                              ></div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
               </div>
               
@@ -548,7 +665,7 @@ const TestDetails = () => {
                   <div className="bg-[#F0F0E5] p-4 rounded-lg">
                     <h4 className="text-md font-medium text-[#666666] mb-2">Distribuição por Gênero</h4>
                     <div className="space-y-3">
-                      {['Masculino', 'Feminino', 'Outro'].map(genero => {
+                      {['Masculino', 'Feminino', 'Outro', 'Prefiro não informar'].map(genero => {
                         const count = teste.respostas.filter(resposta => 
                           resposta.generoJulgador && 
                           resposta.generoJulgador.toLowerCase() === genero.toLowerCase()

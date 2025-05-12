@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getFirestore, doc, getDoc, updateDoc, arrayUnion, increment } from 'firebase/firestore';
 import { app } from '../firebaseConfig';
 import { FaArrowLeft } from 'react-icons/fa';
+import ErrorMessage from '../components/ui/ErrorMessage';
 
 interface Teste {
   id: string;
@@ -27,6 +28,7 @@ interface Teste {
   respostas: any[];
   totalRespostas: number;
   amostras: string[]; // Array com os números das amostras
+  escalaHedonica: '5' | '7' | '9';
 }
 
 const TERMO_CONSENTIMENTO = `TERMO DE CONSENTIMENTO LIVRE E ESCLARECIDO
@@ -41,6 +43,36 @@ Os riscos dessa pesquisa são reações alérgicas e/ou engasgamento por parte d
 Esclarecemos que sua participação no estudo é voluntária e, portanto, o(a) senhor(a) não é obrigado(a) a fornecer as informações e/ou colaborar com as atividades solicitadas pelo pesquisador(a). Caso decida não participar do estudo, ou resolver a qualquer momento desistir do mesmo, não sofrerá nenhum dano. O pesquisador(a) estará à sua disposição para qualquer esclarecimento que considere necessário em qualquer etapa da pesquisa.
 Diante do exposto, declaro que fui devidamente esclarecido(a) e dou o meu consentimento para participar da pesquisa e para publicação dos resultados. Estou ciente que receberei uma via desse documento.`;
 
+const escalasHedonicas = {
+  '5': [
+    { valor: 5, descricao: 'Gostei muito' },
+    { valor: 4, descricao: 'Gostei' },
+    { valor: 3, descricao: 'Indiferente' },
+    { valor: 2, descricao: 'Não gostei' },
+    { valor: 1, descricao: 'Não gostei muito' }
+  ],
+  '7': [
+    { valor: 7, descricao: 'Gostei muitíssimo' },
+    { valor: 6, descricao: 'Gostei muito' },
+    { valor: 5, descricao: 'Gostei moderadamente' },
+    { valor: 4, descricao: 'Nem gostei, nem desgostei' },
+    { valor: 3, descricao: 'Não gostei moderadamente' },
+    { valor: 2, descricao: 'Não gostei muito' },
+    { valor: 1, descricao: 'Não gostei de jeito nenhum' }
+  ],
+  '9': [
+    { valor: 9, descricao: 'Gostei muitíssimo' },
+    { valor: 8, descricao: 'Gostei muito' },
+    { valor: 7, descricao: 'Gostei moderadamente' },
+    { valor: 6, descricao: 'Gostei ligeiramente' },
+    { valor: 5, descricao: 'Nem gostei, nem desgostei' },
+    { valor: 4, descricao: 'Não gostei ligeiramente' },
+    { valor: 3, descricao: 'Não gostei moderadamente' },
+    { valor: 2, descricao: 'Não gostei muito' },
+    { valor: 1, descricao: 'Desgostei muitíssimo' }
+  ]
+};
+
 const ResponderTeste = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -51,7 +83,7 @@ const ResponderTeste = () => {
   const [nomeJulgador, setNomeJulgador] = useState('');
   const [idadeJulgador, setIdadeJulgador] = useState('');
   const [generoJulgador, setGeneroJulgador] = useState('');
-  const [intencaoCompra, setIntencaoCompra] = useState('');
+  const [intencaoCompra, setIntencaoCompra] = useState<{ [key: string]: string }>({});
   const [comentarios, setComentarios] = useState('');
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState('');
@@ -78,6 +110,13 @@ const ResponderTeste = () => {
           });
         });
         setRespostas(respostasIniciais);
+        
+        // Inicializar intenção de compra para cada amostra
+        const intencaoCompraInicial: { [key: string]: string } = {};
+        dados.amostras.forEach((amostra: string) => {
+          intencaoCompraInicial[amostra] = '';
+        });
+        setIntencaoCompra(intencaoCompraInicial);
       } catch (err) {
         setError('Erro ao carregar teste');
         console.error(err);
@@ -123,8 +162,59 @@ const ResponderTeste = () => {
     return (
       <div className="min-h-screen bg-[#F0F0E5] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-[#666666]">Carregando teste...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8BA989] mx-auto"></div>
+          <p className="mt-4 text-[#666666]">Carregando teste...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorMessage
+        title="Erro ao Carregar Teste"
+        message={error}
+        backUrl="/"
+        backText="Voltar para Página Inicial"
+      />
+    );
+  }
+
+  if (!teste) {
+    return (
+      <ErrorMessage
+        title="Teste Não Encontrado"
+        message="O teste solicitado não foi encontrado ou não está mais disponível."
+        backUrl="/"
+        backText="Voltar para Página Inicial"
+      />
+    );
+  }
+
+  if (enviado) {
+    return (
+      <div className="min-h-screen bg-[#F0F0E5] flex flex-col">
+        <header className="bg-primary text-white p-4">
+          <div className="container mx-auto flex justify-between items-center">
+            <div className="flex items-center">
+              <Link to="/" className="mr-4">
+                <img src="/images/logo-panc.png" alt="PANC Logo" className="h-12 w-auto" />
+              </Link>
+              <h1 className="text-2xl font-bold">Avaliação Sensorial</h1>
+            </div>
+          </div>
+        </header>
+        <main className="flex-grow flex items-center justify-center p-4">
+          <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-8 text-center">
+            <h2 className="text-2xl font-bold text-[#8BA989] mb-4">Obrigado!</h2>
+            <p className="text-[#666666] mb-6">
+              Sua resposta foi enviada com sucesso. Agradecemos sua participação na avaliação sensorial.
+            </p>
+          </div>
+        </main>
+        <footer className="bg-[#8BA989] text-white py-4 text-center text-sm">
+          <p>© 2025 Plataforma de Análise Sensorial de Laticínios Caprinos</p>
+        </footer>
       </div>
     );
   }
@@ -170,152 +260,139 @@ const ResponderTeste = () => {
           <h2 className="text-xl font-bold text-[#8BA989] mb-4">Avaliação Sensorial</h2>
           <p className="text-[#666666]">Preencha o formulário para avaliar os produtos.</p>
         </div>
-        {enviado ? (
-          <div className="max-w-4xl mx-auto bg-white rounded-lg shadow p-6 text-center">
-            <h2 className="text-2xl font-bold text-[#8BA989] mb-4">Resposta Enviada!</h2>
-            <p className="text-[#666666] mb-4">Obrigado por participar da nossa avaliação sensorial.</p>
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="bg-[#8BA989] text-white px-6 py-2 rounded-lg hover:bg-[#6E8F6E]"
-            >
-              Voltar ao Dashboard
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="max-w-4xl mx-auto bg-white rounded-lg shadow p-6 space-y-6">
-            {error && (
-              <div className="bg-[#FEE2E2] text-[#DC2626] p-4 rounded-lg">{error}</div>
-            )}
-            {teste && (
-              <>
-                <div>
-                  <h2 className="text-xl font-bold text-[#8BA989] mb-4">Informações do Produto</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-[#666666] mb-1">Produto</label>
-                      <p className="text-[#333333]">{teste.produto}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-[#666666] mb-1">Fabricante</label>
-                      <p className="text-[#333333]">{teste.fabricante}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-[#666666] mb-1">Tipo de Embalagem</label>
-                      <p className="text-[#333333]">{teste.tipoEmbalagem}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-[#666666] mb-1">Peso do Produto</label>
-                      <p className="text-[#333333]">{teste.pesoProduto}</p>
-                    </div>
+        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto bg-white rounded-lg shadow p-6 space-y-6">
+          {error && (
+            <div className="bg-[#FEE2E2] text-[#DC2626] p-4 rounded-lg">{error}</div>
+          )}
+          {teste && (
+            <>
+              <div>
+                <h2 className="text-xl font-bold text-[#8BA989] mb-4">Informações do Produto</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#666666] mb-1">Produto</label>
+                    <p className="text-[#333333]">{teste.produto}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#666666] mb-1">Fabricante</label>
+                    <p className="text-[#333333]">{teste.fabricante}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#666666] mb-1">Tipo de Embalagem</label>
+                    <p className="text-[#333333]">{teste.tipoEmbalagem}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#666666] mb-1">Peso do Produto</label>
+                    <p className="text-[#333333]">{teste.pesoProduto}</p>
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <h2 className="text-xl font-bold text-[#8BA989] mb-4">Suas Informações</h2>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-[#666666] mb-1">Seu Nome*</label>
-                      <input
-                        type="text"
-                        value={nomeJulgador}
-                        onChange={(e) => setNomeJulgador(e.target.value)}
-                        className="w-full px-4 py-2 border border-[#D1D5DB] rounded-lg focus:ring-[#8BA989]"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-[#666666] mb-1">Sua Idade*</label>
-                      <input
-                        type="number"
-                        value={idadeJulgador}
-                        onChange={(e) => setIdadeJulgador(e.target.value)}
-                        className="w-full px-4 py-2 border border-[#D1D5DB] rounded-lg focus:ring-[#8BA989]"
-                        required
-                        min="18"
-                        max="120"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-[#666666] mb-1">Seu Gênero*</label>
-                      <select
-                        value={generoJulgador}
-                        onChange={(e) => setGeneroJulgador(e.target.value)}
-                        className="w-full px-4 py-2 border border-[#D1D5DB] rounded-lg focus:ring-[#8BA989]"
-                        required
-                      >
-                        <option value="">Selecione...</option>
-                        <option value="masculino">Masculino</option>
-                        <option value="feminino">Feminino</option>
-                        <option value="outro">Outro</option>
-                        <option value="prefiro_nao_informar">Prefiro não informar</option>
-                      </select>
-                    </div>
+              <div>
+                <h2 className="text-xl font-bold text-[#8BA989] mb-4">Suas Informações</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#666666] mb-1">Seu Nome*</label>
+                    <input
+                      type="text"
+                      value={nomeJulgador}
+                      onChange={(e) => setNomeJulgador(e.target.value)}
+                      className="w-full px-4 py-2 border border-[#D1D5DB] rounded-lg focus:ring-[#8BA989]"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#666666] mb-1">Sua Idade*</label>
+                    <input
+                      type="number"
+                      value={idadeJulgador}
+                      onChange={(e) => setIdadeJulgador(e.target.value)}
+                      className="w-full px-4 py-2 border border-[#D1D5DB] rounded-lg focus:ring-[#8BA989]"
+                      required
+                      min="18"
+                      max="120"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#666666] mb-1">Seu Gênero*</label>
+                    <select
+                      value={generoJulgador}
+                      onChange={(e) => setGeneroJulgador(e.target.value)}
+                      className="w-full px-4 py-2 border border-[#D1D5DB] rounded-lg focus:ring-[#8BA989]"
+                      required
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="masculino">Masculino</option>
+                      <option value="feminino">Feminino</option>
+                      <option value="outro">Outro</option>
+                      <option value="prefiro_nao_informar">Prefiro não informar</option>
+                    </select>
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <h2 className="text-xl font-bold text-[#8BA989] mb-4">Avaliação das Amostras</h2>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Atributo</th>
-                          {teste.amostras.map((amostra) => (
-                            <th key={amostra} className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Amostra {amostra}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {teste.atributosAvaliados.map((atributo) => (
-                          <tr key={atributo}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {atributo.charAt(0).toUpperCase() + atributo.slice(1).replace(/([A-Z])/g, ' $1')}*
-                            </td>
-                            {teste.amostras.map((amostra) => (
-                              <td key={amostra} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <div className="grid grid-cols-5 gap-2">
-                                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((valor) => (
-                                    <label key={valor} className="flex flex-col items-center">
-                                      <input
-                                        type="radio"
-                                        name={`${atributo}-${amostra}`}
-                                        value={valor}
-                                        checked={respostas[atributo]?.[amostra] === valor}
-                                        onChange={() => setRespostas({
-                                          ...respostas,
-                                          [atributo]: {
-                                            ...respostas[atributo],
-                                            [amostra]: valor
-                                          }
-                                        })}
-                                        className="text-[#8BA989] focus:ring-[#8BA989]"
-                                        required
-                                      />
-                                      <span className="text-sm text-[#666666]">{valor}</span>
-                                    </label>
-                                  ))}
-                                </div>
-                              </td>
-                            ))}
-                          </tr>
+              <div>
+                <h2 className="text-xl font-bold text-[#8BA989] mb-4">Avaliação das Amostras</h2>
+                <div className="space-y-6">
+                  {teste.atributosAvaliados.map((atributo) => (
+                    <div key={atributo} className="bg-white rounded-lg shadow p-4">
+                      <h3 className="text-xl font-semibold text-[#8BA989] mb-3">
+                        {atributo.charAt(0).toUpperCase() + atributo.slice(1).replace(/([A-Z])/g, ' $1')}:
+                      </h3>
+                      <div className="space-y-4">
+                        {teste.amostras.map((amostra) => (
+                          <div key={amostra} className="border border-gray-200 rounded-lg p-4">
+                            <h4 className="font-medium text-gray-700 mb-2">Amostra {amostra}</h4>
+                            <div className="grid grid-cols-1 gap-1">
+                              {escalasHedonicas[teste.escalaHedonica].slice().reverse().map(({ valor, descricao }) => (
+                                <label
+                                  key={valor}
+                                  className="flex items-center p-1.5 rounded-lg hover:bg-gray-50 cursor-pointer"
+                                >
+                                  <input
+                                    type="radio"
+                                    name={`${atributo}-${amostra}`}
+                                    value={valor}
+                                    checked={respostas[atributo]?.[amostra] === valor}
+                                    onChange={() => setRespostas({
+                                      ...respostas,
+                                      [atributo]: {
+                                        ...respostas[atributo],
+                                        [amostra]: valor
+                                      }
+                                    })}
+                                    className="w-4 h-4 text-[#8BA989] focus:ring-[#8BA989]"
+                                    required
+                                  />
+                                  <div className="ml-3">
+                                    <span className="text-sm font-medium text-gray-900">{valor}</span>
+                                    <span className="ml-2 text-sm text-gray-600">{descricao}</span>
+                                  </div>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+              </div>
 
-                <div>
-                  <h2 className="text-xl font-bold text-[#8BA989] mb-4">Intenção de Compra</h2>
-                  <div className="space-y-4">
-                    <div>
+              <div>
+                <h2 className="text-xl font-bold text-[#8BA989] mb-4">Intenção de Compra</h2>
+                <div className="space-y-4">
+                  {teste.amostras.map((amostra) => (
+                    <div key={amostra}>
                       <label className="block text-sm font-medium text-[#666666] mb-1">
-                        Se eu visse esse produto no mercado eu*
+                        Para a Amostra {amostra}, se eu visse esse produto no mercado eu*
                       </label>
                       <select
-                        value={intencaoCompra}
-                        onChange={(e) => setIntencaoCompra(e.target.value)}
+                        value={intencaoCompra[amostra] || ''}
+                        onChange={(e) => setIntencaoCompra({
+                          ...intencaoCompra,
+                          [amostra]: e.target.value
+                        })}
                         className="w-full px-4 py-2 border border-[#D1D5DB] rounded-lg focus:ring-[#8BA989]"
                         required
                       >
@@ -327,33 +404,33 @@ const ResponderTeste = () => {
                         <option value="definitivamente_nao_compraria">Definitivamente não compraria</option>
                       </select>
                     </div>
+                  ))}
 
-                    <div>
-                      <label className="block text-sm font-medium text-[#666666] mb-1">
-                        Comentários (opcional)
-                      </label>
-                      <textarea
-                        value={comentarios}
-                        onChange={(e) => setComentarios(e.target.value)}
-                        className="w-full px-4 py-2 border border-[#D1D5DB] rounded-lg focus:ring-[#8BA989]"
-                        rows={4}
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#666666] mb-1">
+                      Comentários (opcional)
+                    </label>
+                    <textarea
+                      value={comentarios}
+                      onChange={(e) => setComentarios(e.target.value)}
+                      className="w-full px-4 py-2 border border-[#D1D5DB] rounded-lg focus:ring-[#8BA989]"
+                      rows={4}
+                    />
                   </div>
                 </div>
+              </div>
 
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    className="bg-[#8BA989] text-white px-6 py-2 rounded-lg hover:bg-[#6E8F6E]"
-                  >
-                    Enviar Avaliação
-                  </button>
-                </div>
-              </>
-            )}
-          </form>
-        )}
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="bg-[#8BA989] text-white px-6 py-2 rounded-lg hover:bg-[#6E8F6E]"
+                >
+                  Enviar Avaliação
+                </button>
+              </div>
+            </>
+          )}
+        </form>
       </main>
       <footer className="bg-[#8BA989] text-white py-4 text-center text-sm">
         <p>© 2025 Plataforma de Análise Sensorial de Laticínios Caprinos</p>

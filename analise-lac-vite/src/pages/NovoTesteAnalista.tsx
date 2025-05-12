@@ -5,6 +5,7 @@ import { db } from '../firebaseConfig';
 import { useAuth } from '../contexts/AuthContext';
 import QRCode from 'qrcode';
 import { FaArrowLeft } from 'react-icons/fa';
+import ErrorMessage from '../components/ui/ErrorMessage';
 
 interface FormData {
   produto: string;
@@ -21,6 +22,7 @@ interface FormData {
   amostras: string[];
   atributosAvaliados: string[];
   tipoAnaliseEstatistica: string;
+  escalaHedonica: '5' | '7' | '9';
 }
 
 const atributosPadrao = [
@@ -30,6 +32,36 @@ const atributosPadrao = [
   'textura',
   'impressão global'
 ];
+
+const escalasHedonicas = {
+  '5': [
+    { valor: 5, descricao: 'Gostei muito' },
+    { valor: 4, descricao: 'Gostei' },
+    { valor: 3, descricao: 'Indiferente' },
+    { valor: 2, descricao: 'Não gostei' },
+    { valor: 1, descricao: 'Não gostei muito' }
+  ],
+  '7': [
+    { valor: 7, descricao: 'Gostei muitíssimo' },
+    { valor: 6, descricao: 'Gostei muito' },
+    { valor: 5, descricao: 'Gostei moderadamente' },
+    { valor: 4, descricao: 'Nem gostei, nem desgostei' },
+    { valor: 3, descricao: 'Não gostei moderadamente' },
+    { valor: 2, descricao: 'Não gostei muito' },
+    { valor: 1, descricao: 'Não gostei de jeito nenhum' }
+  ],
+  '9': [
+    { valor: 9, descricao: 'Gostei muitíssimo' },
+    { valor: 8, descricao: 'Gostei muito' },
+    { valor: 7, descricao: 'Gostei moderadamente' },
+    { valor: 6, descricao: 'Gostei ligeiramente' },
+    { valor: 5, descricao: 'Nem gostei, nem desgostei' },
+    { valor: 4, descricao: 'Não gostei ligeiramente' },
+    { valor: 3, descricao: 'Não gostei moderadamente' },
+    { valor: 2, descricao: 'Não gostei muito' },
+    { valor: 1, descricao: 'Desgostei muitíssimo' }
+  ]
+};
 
 export default function NovoTesteAnalista() {
   const navigate = useNavigate();
@@ -58,7 +90,8 @@ export default function NovoTesteAnalista() {
     quantidadeAmostras: 2,
     amostras: ['', ''],
     atributosAvaliados: atributosPadrao,
-    tipoAnaliseEstatistica: 'anova'
+    tipoAnaliseEstatistica: 'anova',
+    escalaHedonica: '9'
   });
 
   useEffect(() => {
@@ -68,6 +101,17 @@ export default function NovoTesteAnalista() {
       return;
     }
   }, [user, navigate]);
+
+  if (!user) {
+    return (
+      <ErrorMessage
+        title="Acesso Negado"
+        message="Você precisa estar logado como analista para acessar esta página."
+        backUrl="/login"
+        backText="Ir para Login"
+      />
+    );
+  }
 
   useEffect(() => {
     // Atualizar atributos avaliados quando houver mudanças nas seleções
@@ -202,6 +246,17 @@ export default function NovoTesteAnalista() {
     navigate('/testes');
   };
 
+  if (error && !testCreated) {
+    return (
+      <ErrorMessage
+        title="Erro ao Criar Teste"
+        message={error}
+        backUrl="/testes"
+        backText="Voltar para Lista de Testes"
+      />
+    );
+  }
+
   return (
     <div className="bg-[#F0F0E5] min-h-screen flex flex-col">
       <header className="bg-primary text-white p-4">
@@ -288,12 +343,6 @@ export default function NovoTesteAnalista() {
         ) : (
           <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
             <h2 className="text-2xl font-semibold text-[#8BA989] mb-6">Cadastro de Novo Teste</h2>
-            
-            {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                {error}
-              </div>
-            )}
             
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Dados do Produto */}
@@ -428,6 +477,32 @@ export default function NovoTesteAnalista() {
                       <option value="aceitacao">Aceitação</option>
                     </select>
                   </div>
+                  
+                  {formData.tipoTeste === 'escalaHedonica' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Escala Hedônica
+                      </label>
+                      <select
+                        name="escalaHedonica"
+                        value={formData.escalaHedonica}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8BA989]"
+                      >
+                        <option value="5">Escala de 5 pontos</option>
+                        <option value="7">Escala de 7 pontos</option>
+                        <option value="9">Escala de 9 pontos</option>
+                      </select>
+                      <div className="mt-2 text-sm text-gray-600">
+                        <p className="font-medium mb-1">Descrição da escala:</p>
+                        <ul className="list-disc list-inside">
+                          {escalasHedonicas[formData.escalaHedonica].map(({ valor, descricao }) => (
+                            <li key={valor}>{valor} - {descricao}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">

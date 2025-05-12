@@ -185,6 +185,7 @@ export default function EditarPerfil() {
                     <option value="masculino">Masculino</option>
                     <option value="feminino">Feminino</option>
                     <option value="outro">Outro</option>
+                    <option value="prefiro_nao_informar">Prefiro não informar</option>
                   </select>
                 </div>
 
