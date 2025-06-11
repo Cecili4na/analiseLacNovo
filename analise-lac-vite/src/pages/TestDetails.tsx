@@ -4,7 +4,6 @@ import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { app } from '../firebaseConfig';
 import { FaArrowLeft, FaFileExcel } from 'react-icons/fa';
 import ErrorMessage from '../components/ui/ErrorMessage';
-import { saveAs } from 'file-saver';
 import ExcelJS from 'exceljs';
 
 interface Teste {
@@ -333,6 +332,7 @@ const TestDetails = () => {
 
     const buffer = await wb.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const { saveAs } = await import('file-saver');
     saveAs(blob, `teste_${teste.id}_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
