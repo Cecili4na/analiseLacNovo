@@ -4,7 +4,8 @@ import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { app } from '../firebaseConfig';
 import { FaArrowLeft, FaFileExcel } from 'react-icons/fa';
 import ErrorMessage from '../components/ui/ErrorMessage';
-import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import ExcelJS from 'exceljs';
 
 interface Teste {
   id: string;
@@ -185,18 +186,36 @@ const TestDetails = () => {
     carregarTeste();
   }, [id]);
 
-  const exportarParaExcel = () => {
+  const exportarParaExcel = async () => {
     if (!teste) return;
-    const dadosExportacao: any[] = [];
-    dadosExportacao.push(['INFORMAÇÕES DO TESTE']);
-    dadosExportacao.push(['Produto:', teste.produto]);
-    dadosExportacao.push(['Fabricante:', teste.fabricante]);
-    dadosExportacao.push(['Data do Teste:', new Date(teste.dataTeste).toLocaleDateString()]);
-    dadosExportacao.push(['Total de Respostas:', teste.totalRespostas]);
-    dadosExportacao.push([]);
-    dadosExportacao.push(['----------------------------------------------']);
-    dadosExportacao.push([]);
-    dadosExportacao.push(['TABELA DE NOTAS']);
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Resultados');
+
+    let rowIdx = 1;
+    ws.getCell(`A${rowIdx}`).value = 'INFORMAÇÕES DO TESTE';
+    ws.getCell(`A${rowIdx}`).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFB0B0B0' }
+    };
+    ws.getCell(`A${rowIdx}`).font = { bold: true };
+    rowIdx++;
+    ws.addRow([ 'Produto:', teste.produto ]); rowIdx++;
+    ws.addRow([ 'Fabricante:', teste.fabricante ]); rowIdx++;
+    ws.addRow([ 'Data do Teste:', new Date(teste.dataTeste).toLocaleDateString() ]); rowIdx++;
+    ws.addRow([ 'Total de Respostas:', teste.totalRespostas ]); rowIdx++;
+    ws.addRow([]); rowIdx++;
+    ws.addRow(['----------------------------------------------']); rowIdx++;
+    ws.addRow([]); rowIdx++;
+
+    ws.getCell(`A${rowIdx}`).value = 'TABELA DE NOTAS';
+    ws.getCell(`A${rowIdx}`).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFB0B0B0' }
+    };
+    ws.getCell(`A${rowIdx}`).font = { bold: true };
+    rowIdx++;
     const cabecalhoNotas = ['Julgador', 'Idade', 'Gênero'];
     teste.amostras.forEach(amostra => {
       teste.atributosAvaliados.forEach(atributo => {
@@ -204,7 +223,22 @@ const TestDetails = () => {
       });
       cabecalhoNotas.push(`A${amostra} - Intenção de Compra`);
     });
-    dadosExportacao.push(cabecalhoNotas);
+    ws.addRow(cabecalhoNotas); 
+    const headerRowNotas = ws.getRow(rowIdx);
+    headerRowNotas.eachCell(cell => {
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE0E0E0' }
+      };
+      cell.font = { bold: true };
+      cell.border = {
+        bottom: { style: 'thin', color: { argb: 'FF888888' } },
+        left: { style: 'thin', color: { argb: 'FF888888' } },
+        right: { style: 'thin', color: { argb: 'FF888888' } }
+      };
+    });
+    rowIdx++;
     teste.respostas.forEach(resposta => {
       const linhaDados = [
         resposta.nomeJulgador,
@@ -219,17 +253,40 @@ const TestDetails = () => {
         const intencao = resposta.intencaoCompra?.[amostra]?.replace(/_/g, ' ') || '';
         linhaDados.push(intencao);
       });
-      dadosExportacao.push(linhaDados);
+      ws.addRow(linhaDados); rowIdx++;
     });
-    dadosExportacao.push([]);
-    dadosExportacao.push(['----------------------------------------------']);
-    dadosExportacao.push([]);
-    dadosExportacao.push(['MÉDIAS POR ATRIBUTO E AMOSTRA']);
+    ws.addRow([]); rowIdx++;
+    ws.addRow(['----------------------------------------------']); rowIdx++;
+    ws.addRow([]); rowIdx++;
+
+    ws.getCell(`A${rowIdx}`).value = 'MÉDIAS POR ATRIBUTO E AMOSTRA';
+    ws.getCell(`A${rowIdx}`).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFB0B0B0' }
+    };
+    ws.getCell(`A${rowIdx}`).font = { bold: true };
+    rowIdx++;
     const cabecalhoMedias = ['Atributo'];
     teste.amostras.forEach(amostra => {
       cabecalhoMedias.push(`Amostra ${amostra}`);
     });
-    dadosExportacao.push(cabecalhoMedias);
+    ws.addRow(cabecalhoMedias); 
+    const headerRowMedias = ws.getRow(rowIdx);
+    headerRowMedias.eachCell(cell => {
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE0E0E0' }
+      };
+      cell.font = { bold: true };
+      cell.border = {
+        bottom: { style: 'thin', color: { argb: 'FF888888' } },
+        left: { style: 'thin', color: { argb: 'FF888888' } },
+        right: { style: 'thin', color: { argb: 'FF888888' } }
+      };
+    });
+    rowIdx++;
     teste.atributosAvaliados.forEach(atributo => {
       const linhaMedias = [atributo];
       teste.amostras.forEach(amostra => {
@@ -243,28 +300,40 @@ const TestDetails = () => {
           linhaMedias.push(media.toFixed(2));
         }
       });
-      dadosExportacao.push(linhaMedias);
+      ws.addRow(linhaMedias); rowIdx++;
     });
-    dadosExportacao.push([]);
-    dadosExportacao.push(['----------------------------------------------']);
-    dadosExportacao.push([]);
-    dadosExportacao.push(['COMENTÁRIOS DOS AVALIADORES']);
-    dadosExportacao.push(['Nome', 'Comentário', 'Data']);
+    ws.addRow([]); rowIdx++;
+    ws.addRow(['----------------------------------------------']); rowIdx++;
+    ws.addRow([]); rowIdx++;
+
+    ws.getCell(`A${rowIdx}`).value = 'COMENTÁRIOS DOS AVALIADORES';
+    ws.getCell(`A${rowIdx}`).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFB0B0B0' }
+    };
+    ws.getCell(`A${rowIdx}`).font = { bold: true };
+    rowIdx++;
+    ws.addRow(['Nome', 'Comentário', 'Data']); rowIdx++;
     teste.respostas.forEach(resposta => {
       if (resposta.comentarios) {
-        dadosExportacao.push([
+        ws.addRow([
           resposta.nomeJulgador,
           resposta.comentarios,
           new Date(resposta.dataAvaliacao).toLocaleDateString()
-        ]);
+        ]); rowIdx++;
       }
     });
-    const ws = XLSX.utils.aoa_to_sheet(dadosExportacao);
-    ws['!cols'] = ws['!cols'] || [];
-    ws['!cols'][0] = { wch: 30 };
-    const wbFinal = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wbFinal, ws, 'Resultados');
-    XLSX.writeFile(wbFinal, `teste_${teste.id}_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+    // Largura das colunas: primeira larga, demais médias
+    ws.getColumn(1).width = 30;
+    for (let i = 2; i <= cabecalhoNotas.length; i++) {
+      ws.getColumn(i).width = 20;
+    }
+
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, `teste_${teste.id}_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   if (loading) {
