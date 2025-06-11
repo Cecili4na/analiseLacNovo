@@ -4,6 +4,7 @@ import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { app } from '../firebaseConfig';
 import { FaArrowLeft, FaFileExcel } from 'react-icons/fa';
 import ErrorMessage from '../components/ui/ErrorMessage';
+import * as XLSX from 'xlsx';
 
 interface Teste {
   id: string;
@@ -80,19 +81,14 @@ const TestDetails = () => {
 
   const validarDadosTeste = (dados: any): boolean => {
     if (!dados) return false;
-
-    // Campos mínimos necessários para exibir um teste
     const camposMinimos = [
       'produto',
       'fabricante'
     ];
-
-    // Verifica se os campos mínimos existem
     const camposMinimosValidos = camposMinimos.every(campo => {
       const valor = dados[campo];
       return valor !== undefined && valor !== null && valor !== '';
     });
-
     return camposMinimosValidos;
   };
 
@@ -103,7 +99,6 @@ const TestDetails = () => {
         setLoading(false);
         return;
       }
-
       try {
         const db = getFirestore(app);
         const testeDoc = await getDoc(doc(db, 'testes_pendentes', id));
@@ -120,7 +115,6 @@ const TestDetails = () => {
             setLoading(false);
             return;
           }
-          // Adiciona campos padrão para testes antigos
           const dadosCompletos = {
             produto: dados.produto || '',
             fabricante: dados.fabricante || '',
@@ -154,7 +148,6 @@ const TestDetails = () => {
             setLoading(false);
             return;
           }
-          // Adiciona campos padrão para testes antigos
           const dadosCompletos = {
             produto: dados.produto || '',
             fabricante: dados.fabricante || '',
@@ -194,19 +187,16 @@ const TestDetails = () => {
 
   const exportarParaExcel = () => {
     if (!teste) return;
-    
-    // Preparar dados para exportação
-    const dadosExportacao = [];
-    
-    // Cabeçalho com informações do teste
+    const dadosExportacao: any[] = [];
     dadosExportacao.push(['INFORMAÇÕES DO TESTE']);
-    dadosExportacao.push(['Produto', teste.produto]);
-    dadosExportacao.push(['Fabricante', teste.fabricante]);
-    dadosExportacao.push(['Data do Teste', new Date(teste.dataTeste).toLocaleDateString()]);
-    dadosExportacao.push(['Total de Respostas', teste.totalRespostas]);
+    dadosExportacao.push(['Produto:', teste.produto]);
+    dadosExportacao.push(['Fabricante:', teste.fabricante]);
+    dadosExportacao.push(['Data do Teste:', new Date(teste.dataTeste).toLocaleDateString()]);
+    dadosExportacao.push(['Total de Respostas:', teste.totalRespostas]);
     dadosExportacao.push([]);
-    
-    // Cabeçalho da tabela de notas
+    dadosExportacao.push(['----------------------------------------------']);
+    dadosExportacao.push([]);
+    dadosExportacao.push(['TABELA DE NOTAS']);
     const cabecalhoNotas = ['Julgador', 'Idade', 'Gênero'];
     teste.amostras.forEach(amostra => {
       teste.atributosAvaliados.forEach(atributo => {
@@ -215,46 +205,37 @@ const TestDetails = () => {
       cabecalhoNotas.push(`A${amostra} - Intenção de Compra`);
     });
     dadosExportacao.push(cabecalhoNotas);
-    
-    // Dados de cada julgador
     teste.respostas.forEach(resposta => {
       const linhaDados = [
         resposta.nomeJulgador,
         resposta.idadeJulgador,
         resposta.generoJulgador
       ];
-      
-      // Adicionar notas por amostra e atributo
       teste.amostras.forEach(amostra => {
         teste.atributosAvaliados.forEach(atributo => {
           const nota = resposta.notas[atributo]?.[amostra] || '';
           linhaDados.push(nota.toString());
         });
-        // Adicionar intenção de compra para cada amostra
         const intencao = resposta.intencaoCompra?.[amostra]?.replace(/_/g, ' ') || '';
         linhaDados.push(intencao);
       });
-      
       dadosExportacao.push(linhaDados);
     });
-    
-    // Adicionar médias
+    dadosExportacao.push([]);
+    dadosExportacao.push(['----------------------------------------------']);
     dadosExportacao.push([]);
     dadosExportacao.push(['MÉDIAS POR ATRIBUTO E AMOSTRA']);
-    
     const cabecalhoMedias = ['Atributo'];
     teste.amostras.forEach(amostra => {
       cabecalhoMedias.push(`Amostra ${amostra}`);
     });
     dadosExportacao.push(cabecalhoMedias);
-    
     teste.atributosAvaliados.forEach(atributo => {
       const linhaMedias = [atributo];
       teste.amostras.forEach(amostra => {
         const notas = teste.respostas
           .map(resposta => resposta.notas[atributo]?.[amostra])
           .filter(nota => nota !== undefined && nota !== null);
-        
         if (notas.length === 0) {
           linhaMedias.push('');
         } else {
@@ -264,26 +245,26 @@ const TestDetails = () => {
       });
       dadosExportacao.push(linhaMedias);
     });
-    
-    // Converter para CSV
-    let csvContent = "data:text/csv;charset=utf-8,";
-    
-    dadosExportacao.forEach(row => {
-      const rowString = row.map(cell => {
-        if (cell === null || cell === undefined) return '';
-        return `"${cell.toString().replace(/"/g, '""')}"`;
-      }).join(',');
-      csvContent += rowString + "\r\n";
+    dadosExportacao.push([]);
+    dadosExportacao.push(['----------------------------------------------']);
+    dadosExportacao.push([]);
+    dadosExportacao.push(['COMENTÁRIOS DOS AVALIADORES']);
+    dadosExportacao.push(['Nome', 'Comentário', 'Data']);
+    teste.respostas.forEach(resposta => {
+      if (resposta.comentarios) {
+        dadosExportacao.push([
+          resposta.nomeJulgador,
+          resposta.comentarios,
+          new Date(resposta.dataAvaliacao).toLocaleDateString()
+        ]);
+      }
     });
-    
-    // Criar link para download
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `teste_${teste.id}_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const ws = XLSX.utils.aoa_to_sheet(dadosExportacao);
+    ws['!cols'] = ws['!cols'] || [];
+    ws['!cols'][0] = { wch: 30 };
+    const wbFinal = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wbFinal, ws, 'Resultados');
+    XLSX.writeFile(wbFinal, `teste_${teste.id}_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   if (loading) {
@@ -306,7 +287,6 @@ const TestDetails = () => {
             </button>
           </div>
         </header>
-
         <main className="container mx-auto p-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center p-8">
@@ -315,7 +295,6 @@ const TestDetails = () => {
             </div>
           </div>
         </main>
-
         <footer className="bg-[#8BA989] text-white py-4 text-center text-sm">
           <p>© 2025 Plataforma de Análise Sensorial de Laticínios Caprinos</p>
         </footer>
@@ -353,7 +332,6 @@ const TestDetails = () => {
           </button>
         </div>
       </header>
-
       <main className="container mx-auto p-4">
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <div className="flex justify-between items-center">
@@ -459,7 +437,6 @@ const TestDetails = () => {
               </div>
             </div>
           </div>
-
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-bold text-[#8BA989] mb-4">Atributos Avaliados</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -473,8 +450,6 @@ const TestDetails = () => {
               ))}
             </div>
           </div>
-
-          {/* Seção de Respostas */}
           {teste.respostas && teste.respostas.length > 0 && (
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex justify-between items-center mb-4">
@@ -561,13 +536,9 @@ const TestDetails = () => {
               )}
             </div>
           )}
-
-          {/* Seção de Análises Estatísticas */}
           {teste.respostas && teste.respostas.length > 0 && teste.amostras && teste.atributosAvaliados && (
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-xl font-bold text-[#8BA989] mb-4">Análises Estatísticas</h2>
-              
-              {/* Médias por Atributo e Amostra */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-[#8BA989] mb-3">Médias por Atributo e Amostra</h3>
                 <div className="overflow-x-auto">
@@ -586,17 +557,14 @@ const TestDetails = () => {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {(teste.atributosAvaliados || []).map((atributo) => {
-                        // Calcular médias para cada atributo e amostra
                         const mediasPorAmostra = (teste.amostras || []).map(amostra => {
                           const notas = (teste.respostas || [])
                             .map(resposta => resposta.notas?.[atributo]?.[amostra])
                             .filter(nota => nota !== undefined && nota !== null);
-                          
                           if (notas.length === 0) return '-';
                           const soma = notas.reduce((acc, nota) => acc + nota, 0);
                           return (soma / notas.length).toFixed(2);
                         });
-                        
                         return (
                           <tr key={atributo}>
                             <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
@@ -614,8 +582,6 @@ const TestDetails = () => {
                   </table>
                 </div>
               </div>
-              
-              {/* Análise de Intenção de Compra */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-[#8BA989] mb-3">Análise de Intenção de Compra</h3>
                 <div className="grid grid-cols-1 gap-4">
@@ -634,9 +600,7 @@ const TestDetails = () => {
                             resposta.intencaoCompra && 
                             resposta.intencaoCompra[amostra] === value
                           ).length;
-                          
                           const porcentagem = ((count / teste.respostas.length) * 100).toFixed(1);
-                          
                           return (
                             <div key={value}>
                               <div className="flex justify-between mb-1">
@@ -657,8 +621,6 @@ const TestDetails = () => {
                   ))}
                 </div>
               </div>
-              
-              {/* Análise Demográfica */}
               <div>
                 <h3 className="text-lg font-semibold text-[#8BA989] mb-3">Análise Demográfica</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -670,9 +632,7 @@ const TestDetails = () => {
                           resposta.generoJulgador && 
                           resposta.generoJulgador.toLowerCase() === genero.toLowerCase()
                         ).length;
-                        
                         const porcentagem = ((count / teste.respostas.length) * 100).toFixed(1);
-                        
                         return (
                           <div key={genero}>
                             <div className="flex justify-between mb-1">
@@ -690,24 +650,19 @@ const TestDetails = () => {
                       })}
                     </div>
                   </div>
-                  
                   <div className="bg-[#F0F0E5] p-4 rounded-lg">
                     <h4 className="text-md font-medium text-[#666666] mb-2">Distribuição por Faixa Etária</h4>
                     <div className="space-y-3">
                       {['18-25', '26-35', '36-45', '46-55', '56+'].map(faixa => {
                         const count = teste.respostas.filter(resposta => {
                           if (!resposta.idadeJulgador) return false;
-                          
                           const idade = parseInt(resposta.idadeJulgador);
                           if (isNaN(idade)) return false;
-                          
                           if (faixa === '56+') return idade >= 56;
                           const [min, max] = faixa.split('-').map(Number);
                           return idade >= min && idade <= max;
                         }).length;
-                        
                         const porcentagem = ((count / teste.respostas.length) * 100).toFixed(1);
-                        
                         return (
                           <div key={faixa}>
                             <div className="flex justify-between mb-1">
@@ -731,7 +686,6 @@ const TestDetails = () => {
           )}
         </div>
       </main>
-
       <footer className="bg-[#8BA989] text-white py-4 text-center text-sm">
         <p>© 2025 Plataforma de Análise Sensorial de Laticínios Caprinos</p>
       </footer>
