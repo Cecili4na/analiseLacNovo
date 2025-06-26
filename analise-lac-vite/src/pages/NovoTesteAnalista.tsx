@@ -21,7 +21,6 @@ interface FormData {
   quantidadeAmostras: number;
   amostras: string[];
   atributosAvaliados: string[];
-  tipoAnaliseEstatistica: string;
   escalaHedonica: '5' | '7' | '9';
 }
 
@@ -90,7 +89,6 @@ export default function NovoTesteAnalista() {
     quantidadeAmostras: 2,
     amostras: ['', ''],
     atributosAvaliados: atributosPadrao,
-    tipoAnaliseEstatistica: 'anova',
     escalaHedonica: '9'
   });
 
@@ -472,9 +470,9 @@ export default function NovoTesteAnalista() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8BA989]"
                     >
                       <option value="escalaHedonica">Escala Hedônica</option>
-                      <option value="comparacaoPareada">Comparação Pareada</option>
-                      <option value="ordenacao">Ordenação</option>
-                      <option value="aceitacao">Aceitação</option>
+                      <option value="comparacaoPareada" disabled>Comparação Pareada</option>
+                      <option value="ordenacao" disabled>Ordenação</option>
+                      <option value="aceitacao" disabled>Aceitação</option>
                     </select>
                   </div>
                   
@@ -553,21 +551,6 @@ export default function NovoTesteAnalista() {
                         </div>
                       ))}
                     </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tipo de Análise Estatística
-                    </label>
-                    <select
-                      name="tipoAnaliseEstatistica"
-                      value={formData.tipoAnaliseEstatistica}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#8BA989]"
-                    >
-                      <option value="anova">ANOVA - Análise de Variância</option>
-                      <option value="testeMedia">Teste de Média</option>
-                    </select>
                   </div>
                 </div>
               </div>
